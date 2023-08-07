@@ -1,0 +1,10 @@
+name: mdh_extension
+author: Marlon Weghorn
+env_yml_path: environment.yml
+extension_module: src/extension
+description: Metadata-Hub Extension
+long_description: The functionality of the Metadata-Hub is provided by KNIME nodes.
+group_id: graudata
+version: 1.0.0
+vendor: GRAU DATA GmbH, Schwäbisch Gmünd, Germany
+license_file: LICENSE.TXT

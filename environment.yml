@@ -1,0 +1,12 @@
+name: mdh-knime
+channels:
+    - knime
+    - conda-forge
+dependencies:
+    - packaging
+    - python
+    - knime-extension
+    - knime-python-base
+    - markdown
+    - pandas
+    - graudata::mdh
