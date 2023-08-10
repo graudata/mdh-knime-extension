@@ -2,6 +2,7 @@
 
 # Python imports
 import logging
+import re
 
 # Local imports
 import mdh
@@ -88,8 +89,20 @@ def update_global_search_args(
     """
     kwargs[FlowVariables.IGNORE_ERRORS] = flow_variables[FlowVariables.IGNORE_ERRORS]
     kwargs[FlowVariables.IGNORE_FAILED_CONS] = flow_variables[FlowVariables.IGNORE_FAILED_CONS]
-    cores_fw = filter(
-        lambda flow_variable : flow_variable.startswith('global_search_included_core_'),
-        flow_variables
-    )
-    kwargs['cores'] = [flow_variables[core_fw] for core_fw in cores_fw]
+    kwargs['cores'] = split_global_search_cores(flow_variables[FlowVariables.SELECTED_CORES])
+
+
+def split_global_search_cores(cores: str) -> list[str]:
+    """Split the comma seperated string of MdH Cores.
+
+    :param cores: comma seperated MdH Cores
+    :raises RuntimeError: if no MdH Core candidate string could be extracted
+    """
+    cores = [
+        core
+        for core in re.split(r'[^a-zA-Z0-9-_]+', cores)
+        if core != ''
+    ]
+    if not cores:
+        raise RuntimeError('Please provide a minimum of one MdH Core Instance')
+    return cores

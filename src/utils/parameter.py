@@ -1,18 +1,13 @@
 """Parameter specific utils."""
 
 # Python imports
-from typing import Any, Final
-
-
-# 3rd party imports
-import knime.extension as knext
+from typing import Final
 
 
 class FlowVariables:
     """Supported flow variables."""
 
     INSTANCE            : Final[str] = 'instance'
-    IS_GLOBAL_SEARCH    : Final[str] = 'is_global_search'
     IGNORE_ERRORS       : Final[str] = 'ignore_errors'
     IGNORE_FAILED_CONS  : Final[str] = 'ignore_failed_connections'
     ONLY_COUNT          : Final[str] = 'only_count'
@@ -24,25 +19,4 @@ class FlowVariables:
     BLOCKING            : Final[str] = 'blocking'
     LIMIT               : Final[str] = 'limit'
     STATISTIC_SELECTION : Final[str] = 'statistic_selection'
-
-
-def get_parameter_or_flow_variable(
-    candidate_variable: str | bool | None,
-    flow_variable: str,
-    context: knext.ConfigurationContext
-) -> Any:
-    """Select the parameter from the flow variable context or use the candidate variable.
-
-    param: candidate_variable: candidate for parameter selection
-    param: flow_variable: the overwriting flow variable
-    param: context: flow variable context
-    """
-    try:
-        variable = context.flow_variables[flow_variable]
-    except KeyError:
-        variable = candidate_variable
-
-    if variable is None:
-        raise ValueError(f'Please provide a valid variable \'{flow_variable}\'')
-
-    return variable
+    SELECTED_CORES      : Final[str] = 'selected_cores'

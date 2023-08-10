@@ -14,10 +14,6 @@ from utils.mdh import (  # noqa[I100,I201]
     mdh_instance_is_running
 )
 from utils.message import Messages
-from utils.parameter import (  # noqa[I100,I201]
-    FlowVariables,
-    get_parameter_or_flow_variable
-)
 from utils.paths import is_absolute_file_path
 
 LOGGER = logging.getLogger(__name__)
@@ -89,17 +85,6 @@ class HarvestNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-        self.parameter.blocking = get_parameter_or_flow_variable(
-            self.parameter.blocking,
-            FlowVariables.BLOCKING,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if is_global_search:
             LOGGER.warning(f' {Messages.HARVEST_GLOBAL_SEARCH}')

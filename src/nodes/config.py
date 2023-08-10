@@ -2,7 +2,6 @@
 
 # Python imports
 import logging
-import re
 
 # 3rd party imports
 import knime.extension as knext
@@ -12,7 +11,8 @@ import mdh
 from utils.mdh import (  # noqa[I100,I201]
     get_running_mdh_core_names,
     get_running_mdh_global_search_names,
-    mdh_instance_is_running
+    mdh_instance_is_running,
+    split_global_search_cores
 )
 from utils.message import Messages
 from utils.parameter import FlowVariables
@@ -90,7 +90,7 @@ class CoreConfigurationNode(knext.PythonNode):
     """Select a running MdH Core instance.
 
     A list of **MdH Core** instances corresponding to your current MdH environment is retrieved.
-    The node sets flow variables, which are used by downstreaming MdH nodes.
+    The node is used for setting flow variables, which are used by downstreaming MdH nodes.
     """
 
     instance = CoreInstance()
@@ -124,7 +124,6 @@ class CoreConfigurationNode(knext.PythonNode):
             )
 
         exec_context.flow_variables[FlowVariables.INSTANCE] = self.instance.core
-        exec_context.flow_variables[FlowVariables.IS_GLOBAL_SEARCH] = False
 
         return None
 
@@ -140,7 +139,7 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
 
     A list of **MdH Global Search** instances corresponding
     to your current MdH environment is retrieved.
-    The node sets flow variables, which are used by downstreaming MdH nodes.
+    The node is used for setting flow variables, which are used by downstreaming MdH nodes.
     """
 
     instance = GlobalSearchInstance()
@@ -162,13 +161,8 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
             raise RuntimeError(
                 f'Please add a running MdH Global Search called \'{self.instance.global_search}\''
             )
-        cores = [
-            core
-            for core in re.split(r'[^a-zA-Z0-9-_]+', self.instance.selected_cores)
-            if core != ''
-        ]
-        if not cores:
-            raise RuntimeError('Please provide a minimum of one MdH Core Instance')
+
+        cores = split_global_search_cores(self.instance.selected_cores)
         running_cores = [
             core.name
             for core in
@@ -188,13 +182,11 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
                 raise RuntimeError(
                     f'MdH Core \'{core}\' does not have a valid license'
                 )
-
+        
         exec_context.flow_variables[FlowVariables.INSTANCE] = self.instance.global_search
-        exec_context.flow_variables[FlowVariables.IS_GLOBAL_SEARCH] = True
+        exec_context.flow_variables[FlowVariables.SELECTED_CORES] = self.instance.selected_cores
         exec_context.flow_variables[FlowVariables.IGNORE_ERRORS] = self.error_behavior.ignore_errors
         exec_context.flow_variables[FlowVariables.IGNORE_FAILED_CONS] = \
             self.error_behavior.ignore_failed_connections
-        for core in cores:
-            exec_context.flow_variables['global_search_included_core_' + core] = core
 
         return None

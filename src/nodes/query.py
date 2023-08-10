@@ -21,13 +21,10 @@ from utils.mdh import (  # noqa[I100,I201]
     mdh_download_format_exists,
     mdh_instance_is_global_search,
     mdh_instance_is_running,
+    split_global_search_cores,
     update_global_search_args
 )
 from utils.message import Messages
-from utils.parameter import (  # noqa[I100,I201]
-    FlowVariables,
-    get_parameter_or_flow_variable
-)
 from utils.paths import is_absolute_file_path
 
 
@@ -128,32 +125,6 @@ class MetadataQueryToFileNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-        self.parameter.input_query_file = get_parameter_or_flow_variable(
-            self.parameter.input_query_file,
-            FlowVariables.INPUT_QUERY_FILE,
-            config_context
-        )
-        self.parameter.only_count = get_parameter_or_flow_variable(
-            self.parameter.only_count,
-            FlowVariables.ONLY_COUNT,
-            config_context
-        )
-        self.output.download_format = get_parameter_or_flow_variable(
-            self.output.download_format,
-            FlowVariables.DOWNLOAD_FORMAT,
-            config_context
-        )
-        self.output.output_result_file = get_parameter_or_flow_variable(
-            self.output.output_result_file,
-            FlowVariables.OUTPUT_RESULT_FILE,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if not mdh_instance_is_running(self.instance.name, is_global_search):
             LOGGER.warning(f' {Messages.ADD_RUNNING_INSTANCE}')
@@ -243,22 +214,6 @@ class MetadataQueryToStringNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-        self.parameter.input_query_file = get_parameter_or_flow_variable(
-            self.parameter.input_query_file,
-            FlowVariables.INPUT_QUERY_FILE,
-            config_context
-        )
-        self.parameter.only_count = get_parameter_or_flow_variable(
-            self.parameter.only_count,
-            FlowVariables.ONLY_COUNT,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if not mdh_instance_is_running(self.instance.name, is_global_search):
             config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
@@ -279,6 +234,10 @@ class MetadataQueryToStringNode(knext.PythonNode):
             )
         if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             raise RuntimeError(Messages.EXISTING_GRAPHQL_FILE)
+        
+        query_output = QueryOutput(
+            only_count=self.parameter.only_count
+        )
 
         if is_global_search:
             kwargs: dict[str, str | list[str]] = {}
@@ -286,12 +245,14 @@ class MetadataQueryToStringNode(knext.PythonNode):
             result = mdh.global_search.query.query_via_file(
                 self.instance.name,
                 self.parameter.input_query_file,
+                output=query_output,
                 global_search_headers=GlobalSearchHeaders(**kwargs)
             )
         else:
             result = mdh.core.query.query_via_file(
                 self.instance.name,
                 self.parameter.input_query_file,
+                output=query_output
             )
 
         metadata = json.dumps(json.loads(result)['data']['mdhSearch'])
@@ -332,32 +293,6 @@ class FileMetadataToFileNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-        self.parameter.input_metadata_file = get_parameter_or_flow_variable(
-            self.parameter.input_metadata_file,
-            FlowVariables.INPUT_METADATA_FILE,
-            config_context
-        )
-        self.parameter.only_count = get_parameter_or_flow_variable(
-            self.parameter.only_count,
-            FlowVariables.ONLY_COUNT,
-            config_context
-        )
-        self.output.download_format = get_parameter_or_flow_variable(
-            self.output.download_format,
-            FlowVariables.DOWNLOAD_FORMAT,
-            config_context
-        )
-        self.output.output_result_file = get_parameter_or_flow_variable(
-            self.output.output_result_file,
-            FlowVariables.OUTPUT_RESULT_FILE,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if not mdh_instance_is_running(self.instance.name, is_global_search):
             config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
@@ -442,22 +377,6 @@ class FileMetadataToStringNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-        self.parameter.input_metadata_file = get_parameter_or_flow_variable(
-            self.parameter.input_metadata_file,
-            FlowVariables.INPUT_METADATA_FILE,
-            config_context
-        )
-        self.parameter.only_count = get_parameter_or_flow_variable(
-            self.parameter.only_count,
-            FlowVariables.ONLY_COUNT,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if not mdh_instance_is_running(self.instance.name, is_global_search):
             config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
@@ -479,18 +398,24 @@ class FileMetadataToStringNode(knext.PythonNode):
         if not Path(self.parameter.input_metadata_file).is_absolute():
             raise RuntimeError(Messages.QUERY_VALID_INPUT_FILE)
 
+        query_output = QueryOutput(
+            only_count=self.parameter.only_count
+        )
+
         if is_global_search:
             kwargs: dict[str, str | list[str]] = {}
             update_global_search_args(kwargs, exec_context.flow_variables)
             result = mdh.global_search.query.filepath(
                 self.instance.name,
                 self.parameter.input_metadata_file,
+                output=query_output,
                 global_search_headers=GlobalSearchHeaders(**kwargs)
             )
         else:
             result = mdh.core.query.filepath(
                 self.instance.name,
                 self.parameter.input_metadata_file,
+                output=query_output
             )
 
         metadata = json.dumps(json.loads(result)['data']['mdhSearch'])

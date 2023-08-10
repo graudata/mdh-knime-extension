@@ -16,10 +16,6 @@ from utils.mdh import (  # noqa[I100,I201]
     update_global_search_args
 )
 from utils.message import Messages
-from utils.parameter import (  # noqa[I100,I201]
-    FlowVariables,
-    get_parameter_or_flow_variable
-)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -73,12 +69,6 @@ class InfoNode(knext.PythonNode):
 
     def configure(self, config_context: knext.ConfigurationContext):
         """Node configuration."""
-        self.instance.name = get_parameter_or_flow_variable(
-            self.instance.name,
-            FlowVariables.INSTANCE,
-            config_context
-        )
-
         is_global_search = mdh_instance_is_global_search(self.instance.name)
         if not mdh_instance_is_running(self.instance.name, is_global_search):
             LOGGER.warning(f' {Messages.ADD_RUNNING_INSTANCE}')
