@@ -11,20 +11,23 @@ import pandas as pd
 
 # Local imports
 import mdh
-from mdh.types.connection import GlobalSearchHeaders
 from mdh.types.query import (
     DownloadFormat,
     QueryOutput,
     StreamedOutput
 )
+from ports.instance_connection import (
+    INSTANCE_CONNECTION_TYPE,
+    MdHInstanceConnectionPortObject,
+)
 from utils.mdh import (  # noqa[I100,I201]
+    get_global_search_headers,
     mdh_download_format_exists,
     mdh_instance_is_global_search,
-    mdh_instance_is_running,
-    split_global_search_cores,
-    update_global_search_args
+    mdh_instance_is_running
 )
 from utils.message import Messages
+from utils.parameter import FlowVariables
 from utils.paths import is_absolute_file_path
 
 
@@ -42,15 +45,6 @@ __category = knext.category(
 ####################
 # Parameter Groups #
 ####################
-
-
-@knext.parameter_group(label='Instance configuration')
-class Instance:  # noqa[D101]
-
-    name = knext.StringParameter(
-        'Instance name',
-        'The name of a MdH Core or Global Search to run the GraphQL query on.',
-    )
 
 
 @knext.parameter_group(label='Parameter')
@@ -108,6 +102,11 @@ class Output:  # noqa[D101]
     icon_path='icons/write_query.png',
     category=__category
 )
+@knext.input_port(
+    name='Input port',
+    description='Connection data for this node',
+    port_type=INSTANCE_CONNECTION_TYPE
+)
 class MetadataQueryToFileNode(knext.PythonNode):
     """Run a generic GraphQL query on a MdH Core or Global Search and stream the result into a file.
 
@@ -119,17 +118,12 @@ class MetadataQueryToFileNode(knext.PythonNode):
     We are pleased to help.
     """
 
-    instance = Instance()
     parameter = MetadataQueryParameter()
     output = Output()
 
-    def configure(self, config_context: knext.ConfigurationContext):
+    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
         """Node configuration."""
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
-            LOGGER.warning(f' {Messages.ADD_RUNNING_INSTANCE}')
-            config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
-        elif not is_absolute_file_path(Path(self.parameter.input_query_file)):
+        if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             LOGGER.warning(f' {Messages.EXISTING_GRAPHQL_FILE}')
             config_context.set_warning(Messages.EXISTING_GRAPHQL_FILE)
         elif not mdh_download_format_exists(self.output.download_format):
@@ -141,15 +135,18 @@ class MetadataQueryToFileNode(knext.PythonNode):
 
         return None
 
-    def execute(self, exec_context: knext.ExecutionContext):
+    def execute(
+        self,
+        exec_context: knext.ExecutionContext,
+        mdh_connection: MdHInstanceConnectionPortObject
+    ):
         """Node execution."""
-        if not self.instance.name:
-            raise RuntimeError(Messages.ADD_RUNNING_INSTANCE)
+        instance = mdh_connection.data[FlowVariables.INSTANCE]
 
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
+        is_global_search = mdh_instance_is_global_search(instance)
+        if not mdh_instance_is_running(instance, is_global_search):
             raise RuntimeError(
-                f'Please add a running MdH Instance called \'{self.core}\''
+                Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
         if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             raise RuntimeError(Messages.EXISTING_GRAPHQL_FILE)
@@ -167,19 +164,17 @@ class MetadataQueryToFileNode(knext.PythonNode):
             self.parameter.only_count
         )
         if is_global_search:
-            kwargs: dict[str, str | list[str]] = {}
-            update_global_search_args(kwargs, exec_context.flow_variables)
             mdh.global_search.query.query_via_file(
-                self.instance.name,
+                instance,
                 self.parameter.input_query_file,
-                query_output,
-                GlobalSearchHeaders(**kwargs)
+                output=query_output,
+                global_search_headers=get_global_search_headers(mdh_connection.data)
             )
         else:
             mdh.core.query.query_via_file(
-                self.instance.name,
+                instance,
                 self.parameter.input_query_file,
-                query_output
+                output=query_output
             )
 
         return None
@@ -190,6 +185,11 @@ class MetadataQueryToFileNode(knext.PythonNode):
     node_type=knext.NodeType.SOURCE,
     icon_path='icons/read_query.png',
     category=__category
+)
+@knext.input_port(
+    name='Input port',
+    description='Connection data for this node',
+    port_type=INSTANCE_CONNECTION_TYPE
 )
 @knext.output_table(
     'metadata table',
@@ -209,48 +209,45 @@ class MetadataQueryToStringNode(knext.PythonNode):
     We are pleased to help.
     """
 
-    instance = Instance()
     parameter = MetadataQueryParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext):
+    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
         """Node configuration."""
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
-            config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
-        elif not is_absolute_file_path(Path(self.parameter.input_query_file)):
+        if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             config_context.set_warning(Messages.EXISTING_GRAPHQL_FILE)
 
         return None
 
-    def execute(self, exec_context: knext.ExecutionContext):
+    def execute(
+        self,
+        exec_context: knext.ExecutionContext,
+        mdh_connection: MdHInstanceConnectionPortObject
+    ):
         """Node execution."""
-        if not self.instance.name:
-            raise RuntimeError(Messages.ADD_RUNNING_INSTANCE)
+        instance = mdh_connection.data[FlowVariables.INSTANCE]
 
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
+        is_global_search = mdh_instance_is_global_search(instance)
+        if not mdh_instance_is_running(instance, is_global_search):
             raise RuntimeError(
-                f'Please add a running MdH Instance called \'{self.core}\''
+                Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
         if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             raise RuntimeError(Messages.EXISTING_GRAPHQL_FILE)
-        
+
         query_output = QueryOutput(
             only_count=self.parameter.only_count
         )
 
         if is_global_search:
-            kwargs: dict[str, str | list[str]] = {}
-            update_global_search_args(kwargs, exec_context.flow_variables)
             result = mdh.global_search.query.query_via_file(
-                self.instance.name,
+                instance,
                 self.parameter.input_query_file,
                 output=query_output,
-                global_search_headers=GlobalSearchHeaders(**kwargs)
+                global_search_headers=get_global_search_headers(mdh_connection.data)
             )
         else:
             result = mdh.core.query.query_via_file(
-                self.instance.name,
+                instance,
                 self.parameter.input_query_file,
                 output=query_output
             )
@@ -276,6 +273,11 @@ class MetadataQueryToStringNode(knext.PythonNode):
     icon_path='icons/write_file.png',
     category=__category
 )
+@knext.input_port(
+    name='Input port',
+    description='Connection data for this node',
+    port_type=INSTANCE_CONNECTION_TYPE
+)
 class FileMetadataToFileNode(knext.PythonNode):
     """Query metadata of a harvested file on a MdH Core or Global Search and stream the result into a file.
 
@@ -287,16 +289,12 @@ class FileMetadataToFileNode(knext.PythonNode):
     We are pleased to help.
     """
 
-    instance = Instance()
     parameter = FileMetadataParameter()
     output = Output()
 
-    def configure(self, config_context: knext.ConfigurationContext):
+    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
         """Node configuration."""
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
-            config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
-        elif not Path(self.parameter.input_metadata_file).is_absolute():
+        if not Path(self.parameter.input_metadata_file).is_absolute():
             config_context.set_warning(Messages.QUERY_VALID_INPUT_FILE)
         elif not mdh_download_format_exists(self.output.download_format):
             config_context.set_warning(Messages.QUERY_VALID_DOWNLOAD_FORMAT)
@@ -305,15 +303,18 @@ class FileMetadataToFileNode(knext.PythonNode):
 
         return None
 
-    def execute(self, exec_context: knext.ExecutionContext):
+    def execute(
+        self,
+        exec_context: knext.ExecutionContext,
+        mdh_connection: MdHInstanceConnectionPortObject
+    ):
         """Node execution."""
-        if not self.instance.name:
-            raise RuntimeError(Messages.ADD_RUNNING_INSTANCE)
+        instance = mdh_connection.data[FlowVariables.INSTANCE]
 
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
+        is_global_search = mdh_instance_is_global_search(instance)
+        if not mdh_instance_is_running(instance, is_global_search):
             raise RuntimeError(
-                f'Please add a running MdH Instance called \'{self.core}\''
+                Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
         if not Path(self.parameter.input_metadata_file).is_absolute():
             raise RuntimeError(Messages.QUERY_VALID_INPUT_FILE)
@@ -331,17 +332,15 @@ class FileMetadataToFileNode(knext.PythonNode):
             self.parameter.only_count
         )
         if is_global_search:
-            kwargs: dict[str, str | list[str]] = {}
-            update_global_search_args(kwargs, exec_context.flow_variables)
             mdh.global_search.query.filepath(
-                self.instance.name,
+                instance,
                 self.parameter.input_metadata_file,
                 output=query_output,
-                global_search_headers=GlobalSearchHeaders(**kwargs)
+                global_search_headers=get_global_search_headers(mdh_connection.data)
             )
         else:
             mdh.core.query.filepath(
-                self.instance.name,
+                instance,
                 self.parameter.input_metadata_file,
                 output=query_output
             )
@@ -353,6 +352,11 @@ class FileMetadataToFileNode(knext.PythonNode):
     node_type=knext.NodeType.SOURCE,
     icon_path='icons/read_file.png',
     category=__category
+)
+@knext.input_port(
+    name='Input port',
+    description='Connection data for this node',
+    port_type=INSTANCE_CONNECTION_TYPE
 )
 @knext.output_table(
     'metadata table',
@@ -372,28 +376,27 @@ class FileMetadataToStringNode(knext.PythonNode):
     We are pleased to help.
     """
 
-    instance = Instance()
     parameter = FileMetadataParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext):
+    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
         """Node configuration."""
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
-            config_context.set_warning(Messages.ADD_RUNNING_INSTANCE)
-        elif not Path(self.parameter.input_metadata_file).is_absolute():
+        if not Path(self.parameter.input_metadata_file).is_absolute():
             config_context.set_warning(Messages.QUERY_VALID_INPUT_FILE)
 
         return None
 
-    def execute(self, exec_context: knext.ExecutionContext):
+    def execute(
+        self,
+        exec_context: knext.ExecutionContext,
+        mdh_connection: MdHInstanceConnectionPortObject
+    ):
         """Node execution."""
-        if not self.instance.name:
-            raise RuntimeError(Messages.ADD_RUNNING_INSTANCE)
+        instance = mdh_connection.data[FlowVariables.INSTANCE]
 
-        is_global_search = mdh_instance_is_global_search(self.instance.name)
-        if not mdh_instance_is_running(self.instance.name, is_global_search):
+        is_global_search = mdh_instance_is_global_search(instance)
+        if not mdh_instance_is_running(instance, is_global_search):
             raise RuntimeError(
-                f'Please add a running MdH Instance called \'{self.core}\''
+                Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
         if not Path(self.parameter.input_metadata_file).is_absolute():
             raise RuntimeError(Messages.QUERY_VALID_INPUT_FILE)
@@ -403,17 +406,15 @@ class FileMetadataToStringNode(knext.PythonNode):
         )
 
         if is_global_search:
-            kwargs: dict[str, str | list[str]] = {}
-            update_global_search_args(kwargs, exec_context.flow_variables)
             result = mdh.global_search.query.filepath(
-                self.instance.name,
+                instance,
                 self.parameter.input_metadata_file,
                 output=query_output,
-                global_search_headers=GlobalSearchHeaders(**kwargs)
+                global_search_headers=get_global_search_headers(mdh_connection.data)
             )
         else:
             result = mdh.core.query.filepath(
-                self.instance.name,
+                instance,
                 self.parameter.input_metadata_file,
                 output=query_output
             )

@@ -8,6 +8,10 @@ import knime.extension as knext
 
 # Local imports
 import mdh
+from ports.instance_connection import (
+    INSTANCE_CONNECTION_TYPE,
+    MdHInstanceConnectionPortObject,
+)
 from utils.mdh import (  # noqa[I100,I201]
     get_running_mdh_core_names,
     get_running_mdh_global_search_names,
@@ -79,18 +83,22 @@ class ErrorHandling:  # noqa[D101]
 # Configuration Nodes #
 #######################
 
-
 @knext.node(
     name='MdH Core Selection',
     node_type=knext.NodeType.SOURCE,
     icon_path='icons/config.png',
     category=__category
 )
+@knext.output_port(
+    name='Output port',
+    description='Connection data for MdH nodes',
+    port_type=INSTANCE_CONNECTION_TYPE
+)
 class CoreConfigurationNode(knext.PythonNode):
     """Select a running MdH Core instance.
 
-    A list of **MdH Core** instances corresponding to your current MdH environment is retrieved.
-    The node is used for setting flow variables, which are used by downstreaming MdH nodes.
+    This node retrieves a list of running **MdH Core** instances based on your MdH environment
+    and provides downstream MdH nodes with connection data.
     """
 
     instance = CoreInstance()
@@ -102,7 +110,7 @@ class CoreConfigurationNode(knext.PythonNode):
             LOGGER.warning(f' {Messages.ADD_RUNNING_CORE}')
             config_context.set_warning(Messages.ADD_RUNNING_CORE)
 
-        return None
+        return knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
 
     def execute(self, exec_context: knext.ExecutionContext):
         """Node execution."""
@@ -110,22 +118,25 @@ class CoreConfigurationNode(knext.PythonNode):
             raise RuntimeError(Messages.ADD_RUNNING_CORE)
         if not mdh_instance_is_running(self.instance.core, False):
             raise RuntimeError(
-                f'Please add a running MdH Core called \'{self.core}\''
+                Messages.ADD_RUNNING_CORE_BY_NAME.format(core=self.instance.core)
             )
 
         license_ = mdh.core.licensing.info(self.instance.core)
         if license_['licenseData'] is None:
             exec_context.set_warning(
-                f'MdH Core \'{self.instance.core}\' does not have an active license'
+                Messages.ACTIVE_LICENSE_BY_NAME.format(core=self.instance.core)
             )
         if not license_['validKey']:
             exec_context.set_warning(
-                f'MdH Core \'{self.instance.core}\' does not have a valid license'
+                Messages.VALID_LICENSE_BY_NAME.format(core=self.instance.core)
             )
 
-        exec_context.flow_variables[FlowVariables.INSTANCE] = self.instance.core
-
-        return None
+        return MdHInstanceConnectionPortObject(
+            knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
+            {
+                FlowVariables.INSTANCE: self.instance.core
+            }
+        )
 
 
 @knext.node(
@@ -134,12 +145,16 @@ class CoreConfigurationNode(knext.PythonNode):
     icon_path='icons/config.png',
     category=__category
 )
+@knext.output_port(
+    name='Output port',
+    description='Connection data for MdH nodes',
+    port_type=INSTANCE_CONNECTION_TYPE
+)
 class GlobalSearchConfigurationNode(knext.PythonNode):
     """Select a running MdH Global Search instance.
 
-    A list of **MdH Global Search** instances corresponding
-    to your current MdH environment is retrieved.
-    The node is used for setting flow variables, which are used by downstreaming MdH nodes.
+    This node retrieves a list of running **MdH Global Search** instances based on your MdH environment
+    and provides downstream MdH nodes with connection data.
     """
 
     instance = GlobalSearchInstance()
@@ -151,15 +166,19 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
         if not global_searches:
             LOGGER.warning(f' {Messages.ADD_RUNNING_GLOBAL_SEARCH}')
             config_context.set_warning(Messages.ADD_RUNNING_GLOBAL_SEARCH)
-        return None
+
+        return knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
 
     def execute(self, exec_context: knext.ExecutionContext):
         """Node execution."""
         if not self.instance.global_search:
             raise RuntimeError(Messages.ADD_RUNNING_GLOBAL_SEARCH)
+
         if not mdh_instance_is_running(self.instance.global_search, True):
             raise RuntimeError(
-                f'Please add a running MdH Global Search called \'{self.instance.global_search}\''
+                Messages.ADD_RUNNING_GLOBAL_SEARCH_BY_NAME.format(
+                    global_search=self.instance.global_search
+                )
             )
 
         cores = split_global_search_cores(self.instance.selected_cores)
@@ -171,22 +190,24 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
         for core in cores:
             if core not in running_cores:
                 raise RuntimeError(
-                    f'Unable to match provided name \'{core}\' with any active MdH Core instance.'
+                    Messages.ADD_RUNNING_CORE_BY_NAME.format(core=core)
                 )
             license_ = mdh.core.licensing.info(core)
             if license_['licenseData'] is None:
                 raise RuntimeError(
-                    f'MdH Core \'{core}\' does not have an active license'
+                    Messages.ACTIVE_LICENSE_BY_NAME.format(core=core)
                 )
             if not license_['validKey']:
                 raise RuntimeError(
-                    f'MdH Core \'{core}\' does not have a valid license'
+                    Messages.VALID_LICENSE_BY_NAME.format(core=core)
                 )
-        
-        exec_context.flow_variables[FlowVariables.INSTANCE] = self.instance.global_search
-        exec_context.flow_variables[FlowVariables.SELECTED_CORES] = self.instance.selected_cores
-        exec_context.flow_variables[FlowVariables.IGNORE_ERRORS] = self.error_behavior.ignore_errors
-        exec_context.flow_variables[FlowVariables.IGNORE_FAILED_CONS] = \
-            self.error_behavior.ignore_failed_connections
 
-        return None
+        return MdHInstanceConnectionPortObject(
+            knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
+            {
+                FlowVariables.INSTANCE: self.instance.global_search,
+                FlowVariables.SELECTED_CORES: cores,
+                FlowVariables.IGNORE_ERRORS: self.error_behavior.ignore_errors,
+                FlowVariables.IGNORE_FAILED_CONS: self.error_behavior.ignore_failed_connections
+            }
+        )

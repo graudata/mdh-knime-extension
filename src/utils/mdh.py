@@ -10,6 +10,7 @@ from mdh.errors import (
     MdHEnvironmentError,
     MdHNotInitializedError
 )
+from mdh.types.connection import GlobalSearchHeaders
 from mdh.types.query import DownloadFormat
 from .parameter import FlowVariables
 
@@ -78,18 +79,18 @@ def mdh_download_format_exists(download_format: str) -> bool:
     )
 
 
-def update_global_search_args(
-    kwargs: dict[str, str | list[str]],
+def get_global_search_headers(
     flow_variables: dict[str, str]
-) -> None:
-    """Update current global search arguments with additional ones.
+) -> GlobalSearchHeaders:
+    """Get global search header object from flow variables.
 
-    :param kwargs: the current global search arguments
-    :param flow_variables: flow variables containing additional arguments
+    :param header: Global search header dict
     """
-    kwargs[FlowVariables.IGNORE_ERRORS] = flow_variables[FlowVariables.IGNORE_ERRORS]
-    kwargs[FlowVariables.IGNORE_FAILED_CONS] = flow_variables[FlowVariables.IGNORE_FAILED_CONS]
-    kwargs['cores'] = split_global_search_cores(flow_variables[FlowVariables.SELECTED_CORES])
+    return GlobalSearchHeaders(
+        flow_variables[FlowVariables.SELECTED_CORES],
+        flow_variables[FlowVariables.IGNORE_ERRORS],
+        flow_variables[FlowVariables.IGNORE_FAILED_CONS]
+    )
 
 
 def split_global_search_cores(cores: str) -> list[str]:
