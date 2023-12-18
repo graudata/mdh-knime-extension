@@ -121,7 +121,11 @@ class MetadataQueryToFileNode(knext.PythonNode):
     parameter = MetadataQueryParameter()
     output = Output()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             LOGGER.warning(f' {Messages.EXISTING_GRAPHQL_FILE}')
@@ -211,7 +215,11 @@ class MetadataQueryToStringNode(knext.PythonNode):
 
     parameter = MetadataQueryParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         if not is_absolute_file_path(Path(self.parameter.input_query_file)):
             config_context.set_warning(Messages.EXISTING_GRAPHQL_FILE)
@@ -292,7 +300,11 @@ class FileMetadataToFileNode(knext.PythonNode):
     parameter = FileMetadataParameter()
     output = Output()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         if not Path(self.parameter.input_metadata_file).is_absolute():
             config_context.set_warning(Messages.QUERY_VALID_INPUT_FILE)
@@ -378,7 +390,11 @@ class FileMetadataToStringNode(knext.PythonNode):
 
     parameter = FileMetadataParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         if not Path(self.parameter.input_metadata_file).is_absolute():
             config_context.set_warning(Messages.QUERY_VALID_INPUT_FILE)

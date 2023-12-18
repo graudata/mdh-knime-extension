@@ -61,7 +61,11 @@ class InfoNode(knext.PythonNode):
     Get dashboard information of a running MdH Core instance.
     """
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         return None
 

@@ -1,4 +1,4 @@
-"""Custom connection port."""
+"""Custom metadata query port."""
 
 # Python imports
 import pickle
@@ -7,17 +7,17 @@ import pickle
 import knime.extension as knext
 
 
-class MdHInstanceConnectionPortObject(knext.PortObject):
-    """Port for connecting two MdH nodes."""
+class MdHMetadataQueryPortObject(knext.PortObject):
+    """Port for forwarding a metadata query."""
 
     def __init__(
         self,
         spec: knext.BinaryPortObjectSpec,
-        connection_data: dict
+        metadata_query: dict
     ) -> None:
-        """Port for connecting two MdH nodes."""
+        """Port for forwarding a metadata query."""
         super().__init__(spec)
-        self._data = connection_data
+        self._data = metadata_query
 
     def serialize(self) -> bytes:
         """Serializes the object to bytes."""
@@ -28,7 +28,7 @@ class MdHInstanceConnectionPortObject(knext.PortObject):
         cls,
         spec: knext.BinaryPortObjectSpec,
         data: bytes
-    ) -> 'MdHInstanceConnectionPortObject':
+    ) -> 'MdHMetadataQueryPortObject':
         """Creates the port object from its spec and storage."""
         return cls(spec, pickle.loads(data))
 
@@ -38,8 +38,8 @@ class MdHInstanceConnectionPortObject(knext.PortObject):
         return self._data
 
 
-INSTANCE_CONNECTION_TYPE = knext.port_type(
-    name='PortType.MdHInstanceConnection',
-    object_class=MdHInstanceConnectionPortObject,
+METADATA_QUERY_TYPE = knext.port_type(
+    name='PortType.MdHMetadataQueryPortObject',
+    object_class=MdHMetadataQueryPortObject,
     spec_class=knext.BinaryPortObjectSpec
 )

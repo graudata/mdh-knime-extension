@@ -107,7 +107,11 @@ class StatisticNode(knext.PythonNode):
 
     parameter = MetadataStatisticParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         return None
 

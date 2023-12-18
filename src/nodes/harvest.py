@@ -82,7 +82,11 @@ class HarvestNode(knext.PythonNode):
 
     parameter = MetadataHarvestParameter()
 
-    def configure(self, config_context: knext.ConfigurationContext, _: knext.BinaryPortObjectSpec):
+    def configure(
+        self,
+        config_context: knext.ConfigurationContext,
+        _: knext.BinaryPortObjectSpec
+    ):
         """Node configuration."""
         if not is_absolute_file_path(Path(self.parameter.input_task_file)):
             LOGGER.warning(f' {Messages.EXISTING_GRAPHQL_FILE}')
