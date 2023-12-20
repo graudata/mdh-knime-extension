@@ -7,12 +7,18 @@ import pickle
 import knime.extension as knext
 
 
+class MdHInstanceConnectionPortObjectSpec(knext.BinaryPortObjectSpec):
+    """Spec for connecting two MdH nodes."""
+
+    pass
+
+
 class MdHInstanceConnectionPortObject(knext.PortObject):
     """Port for connecting two MdH nodes."""
 
     def __init__(
         self,
-        spec: knext.BinaryPortObjectSpec,
+        spec: MdHInstanceConnectionPortObjectSpec,
         connection_data: dict
     ) -> None:
         """Port for connecting two MdH nodes."""
@@ -26,7 +32,7 @@ class MdHInstanceConnectionPortObject(knext.PortObject):
     @classmethod
     def deserialize(
         cls,
-        spec: knext.BinaryPortObjectSpec,
+        spec: MdHInstanceConnectionPortObjectSpec,
         data: bytes
     ) -> 'MdHInstanceConnectionPortObject':
         """Creates the port object from its spec and storage."""
@@ -41,5 +47,5 @@ class MdHInstanceConnectionPortObject(knext.PortObject):
 INSTANCE_CONNECTION_TYPE = knext.port_type(
     name='PortType.MdHInstanceConnection',
     object_class=MdHInstanceConnectionPortObject,
-    spec_class=knext.BinaryPortObjectSpec
+    spec_class=MdHInstanceConnectionPortObjectSpec
 )

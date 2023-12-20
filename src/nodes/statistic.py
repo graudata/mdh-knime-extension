@@ -22,6 +22,7 @@ from mdh.types.statistic import (
 from ports.instance_connection import (
     INSTANCE_CONNECTION_TYPE,
     MdHInstanceConnectionPortObject,
+    MdHInstanceConnectionPortObjectSpec
 )
 from utils.mdh import (  # noqa[I100,I201]
     mdh_instance_is_global_search,
@@ -110,7 +111,7 @@ class StatisticNode(knext.PythonNode):
     def configure(
         self,
         config_context: knext.ConfigurationContext,
-        _: knext.BinaryPortObjectSpec
+        _: MdHInstanceConnectionPortObjectSpec
     ):
         """Node configuration."""
         return None

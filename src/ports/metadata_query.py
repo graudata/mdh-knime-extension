@@ -7,12 +7,18 @@ import pickle
 import knime.extension as knext
 
 
+class MdHMetadataQueryPortObjectSpec(knext.BinaryPortObjectSpec):
+    """Spec for forwarding a metadata query."""
+
+    pass
+
+
 class MdHMetadataQueryPortObject(knext.PortObject):
     """Port for forwarding a metadata query."""
 
     def __init__(
         self,
-        spec: knext.BinaryPortObjectSpec,
+        spec: MdHMetadataQueryPortObjectSpec,
         metadata_query: dict
     ) -> None:
         """Port for forwarding a metadata query."""
@@ -26,7 +32,7 @@ class MdHMetadataQueryPortObject(knext.PortObject):
     @classmethod
     def deserialize(
         cls,
-        spec: knext.BinaryPortObjectSpec,
+        spec: MdHMetadataQueryPortObjectSpec,
         data: bytes
     ) -> 'MdHMetadataQueryPortObject':
         """Creates the port object from its spec and storage."""
@@ -41,5 +47,5 @@ class MdHMetadataQueryPortObject(knext.PortObject):
 METADATA_QUERY_TYPE = knext.port_type(
     name='PortType.MdHMetadataQueryPortObject',
     object_class=MdHMetadataQueryPortObject,
-    spec_class=knext.BinaryPortObjectSpec
+    spec_class=MdHMetadataQueryPortObjectSpec
 )

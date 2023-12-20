@@ -13,6 +13,7 @@ import mdh
 from ports.instance_connection import (
     INSTANCE_CONNECTION_TYPE,
     MdHInstanceConnectionPortObject,
+    MdHInstanceConnectionPortObjectSpec
 )
 from utils.mdh import (  # noqa[I100,I201]
     get_global_search_headers,
@@ -64,7 +65,7 @@ class InfoNode(knext.PythonNode):
     def configure(
         self,
         config_context: knext.ConfigurationContext,
-        _: knext.BinaryPortObjectSpec
+        _: MdHInstanceConnectionPortObjectSpec
     ):
         """Node configuration."""
         return None

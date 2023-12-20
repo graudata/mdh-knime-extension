@@ -35,3 +35,5 @@ class Messages:
     QUERY_VALID_DOWNLOAD_FORMAT       : Final[str] = 'Please provide a valid download format'
     QUERY_VALID_OUTPUT_FILE           : Final[str] = \
         'Please provide an absolute file path for the output file'
+    QUERY_VALID_FILTER_LOGIC                : Final[str] = \
+        '{filter_key} must be part of \'{filter_logic}\''

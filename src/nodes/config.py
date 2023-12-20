@@ -11,6 +11,7 @@ import mdh
 from ports.instance_connection import (
     INSTANCE_CONNECTION_TYPE,
     MdHInstanceConnectionPortObject,
+    MdHInstanceConnectionPortObjectSpec
 )
 from utils.mdh import (  # noqa[I100,I201]
     get_running_mdh_core_names,
@@ -110,7 +111,7 @@ class CoreConfigurationNode(knext.PythonNode):
             LOGGER.warning(f' {Messages.ADD_RUNNING_CORE}')
             config_context.set_warning(Messages.ADD_RUNNING_CORE)
 
-        return knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
+        return MdHInstanceConnectionPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
 
     def execute(self, exec_context: knext.ExecutionContext):
         """Node execution."""
@@ -132,7 +133,7 @@ class CoreConfigurationNode(knext.PythonNode):
             )
 
         return MdHInstanceConnectionPortObject(
-            knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
+            MdHInstanceConnectionPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
             {
                 FlowVariables.INSTANCE: self.instance.core
             }
@@ -167,7 +168,7 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
             LOGGER.warning(f' {Messages.ADD_RUNNING_GLOBAL_SEARCH}')
             config_context.set_warning(Messages.ADD_RUNNING_GLOBAL_SEARCH)
 
-        return knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
+        return MdHInstanceConnectionPortObjectSpec(INSTANCE_CONNECTION_TYPE.id)
 
     def execute(self, exec_context: knext.ExecutionContext):
         """Node execution."""
@@ -203,7 +204,7 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
                 )
 
         return MdHInstanceConnectionPortObject(
-            knext.BinaryPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
+            MdHInstanceConnectionPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
             {
                 FlowVariables.INSTANCE: self.instance.global_search,
                 FlowVariables.SELECTED_CORES: cores,
