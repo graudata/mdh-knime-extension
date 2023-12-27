@@ -328,6 +328,9 @@ class FilterConfiguration:  # noqa[D101]
 class MetadataQueryCreatorNode(knext.PythonNode):
     """Create simple or complex metadata queries for downstream query nodes.
 
+    Create simple or complex metadata queries for downstream nodes
+    **Metadata Query to String** or **Metadata Query to File**.
+
     Defaults to a maximum of 20 filters.
     """
 
@@ -404,7 +407,7 @@ class MetadataQueryCreatorNode(knext.PythonNode):
 
         query = {
             'filter_logic': filter_logic,
-            'selected_tags': selected_tags.split(', '),
+            'selected_tags': selected_tags.split(', ') if selected_tags else [],
             'limit': limit if limit != 0 else None,
             'offset': offset,
             'only_count': only_count,

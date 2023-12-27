@@ -1,7 +1,7 @@
 """Statistic nodes."""
 
 # Python imports
-import json
+import contextlib
 import logging
 from types import ModuleType
 from typing import Callable
@@ -77,6 +77,7 @@ class MetadataStatisticParameter:  # noqa[D101]
         'Limit',
         'Adjust the maximum of retrieved entries. A value of zero returns all available entries.',
         min_value=0,
+        is_advanced=True
     )
 
 
@@ -108,6 +109,66 @@ class StatisticNode(knext.PythonNode):
 
     parameter = MetadataStatisticParameter()
 
+    def _get_statistic_method_and_param_type(
+        self,
+        statistic_module: ModuleType,
+        selection_param: str
+    ) -> tuple[
+        Callable,
+        StatisticFileTypesParameters |
+        StatisticMimeTypesParameters |
+        StatisticMetadataTagsParameters
+    ]:
+        """Get the method and parameter type of corresponding statistics module."""
+        if (selection_param == StatisticOptions.FILETYPE.name):  # type: ignore[attr-defined]
+            return (statistic_module.get_filetype, StatisticFileTypesParameters)
+        if (selection_param == StatisticOptions.MIMETYPE.name):  # type: ignore[attr-defined]
+            return (statistic_module.get_mimetype, StatisticMimeTypesParameters)
+        return (statistic_module.get_metadata, StatisticMetadataTagsParameters)
+
+    def _get_statistic_data(
+        self,
+        result: list[dict],
+        selection_param: str
+    ):
+        def try_append(column: list, entry: dict, key: str) -> None:
+            with contextlib.suppress(KeyError):
+                column.append(entry[key])
+        type_ = []
+        file_count = []
+        metadata_count = []
+        tag_count = []
+        data_type = []
+        space = []
+        metadata_count_aggregated_values = []
+
+        for entry in result:
+            try_append(type_, entry, 'name')
+            try_append(file_count, entry, 'fileCount')
+            try_append(data_type, entry, 'type')
+            try_append(tag_count, entry, 'count')
+            try_append(metadata_count, entry, 'metadataCount')
+            try_append(space, entry, 'space')
+            try_append(metadata_count_aggregated_values, entry, 'metadataCountAggregatedValues')
+
+        data = {}
+        if (selection_param == StatisticOptions.FILETYPE.name):  # type: ignore[attr-defined]
+            data['FileType'] = type_
+            data['MetadataCount'] = metadata_count
+            data['MetadataCountAggregatedValues'] = metadata_count_aggregated_values
+            data['FileCount'] = file_count
+            data['Space (in bytes)'] = space
+        elif (selection_param == StatisticOptions.MIMETYPE.name):  # type: ignore[attr-defined]
+            data['MIMEType'] = type_
+            data['FileCount'] = file_count
+            data['Space (in bytes)'] = space
+        else:
+            data['Tag'] = type_
+            data['DataType'] = data_type
+            data['TagCount'] = tag_count
+
+        return data
+
     def configure(
         self,
         config_context: knext.ConfigurationContext,
@@ -135,7 +196,7 @@ class StatisticNode(knext.PythonNode):
         else:
             statistic_module = mdh.core.statistic
 
-        func, parameters = _get_statistic_method_and_param_type(
+        func, parameters = self._get_statistic_method_and_param_type(
             statistic_module,
             self.parameter.statistic_selection_param
         )
@@ -147,9 +208,9 @@ class StatisticNode(knext.PythonNode):
                     instance,
                     parameters=parameters(limit=limit),
                     global_search_headers=GlobalSearchHeaders(
-                        mdh_connection.data['cores'],
-                        mdh_connection.data['ignore_errors'],
-                        mdh_connection.data['ignore_failed_connections']
+                        mdh_connection.data[FlowVariables.SELECTED_CORES],
+                        mdh_connection.data[FlowVariables.IGNORE_ERRORS],
+                        mdh_connection.data[FlowVariables.IGNORE_FAILED_CONS]
                     )
                 )
             else:
@@ -158,32 +219,14 @@ class StatisticNode(knext.PythonNode):
                     parameters=parameters(limit=limit)
                 )
         except MdHApiError as err:
-            # TODO: Why errors on filetype and mimetype, but not metadata statistics
-            # TODO: Is this note still relevant?
-            # NOTE: Dirty workaround for empty cores in context of global search
-            LOGGER.warning(str(err))
-            result = []
+            LOGGER.error(str(err))
+            raise
 
-        statistics = json.dumps(result)
-        df = pd.DataFrame(
-            {
-                'statistics': statistics
-            },
-            index=[0],
+        data = self._get_statistic_data(
+            result,
+            self.parameter.statistic_selection_param
         )
-        return knext.Table.from_pandas(df)
 
-
-def _get_statistic_method_and_param_type(
-    statistic_module: ModuleType,
-    selection_param: str,
-) -> tuple[Callable,
-           StatisticFileTypesParameters |
-           StatisticMimeTypesParameters |
-           StatisticMetadataTagsParameters]:
-    """Get the method and parameter type of corresponding statistics module."""
-    if (selection_param == StatisticOptions.FILETYPE.name):  # type: ignore[attr-defined]
-        return (statistic_module.get_filetype, StatisticFileTypesParameters)
-    if (selection_param == StatisticOptions.MIMETYPE.name):  # type: ignore[attr-defined]
-        return (statistic_module.get_mimetype, StatisticMimeTypesParameters)
-    return (statistic_module.get_metadata, StatisticMetadataTagsParameters)
+        return knext.Table.from_pandas(
+            pd.DataFrame(data)
+        )

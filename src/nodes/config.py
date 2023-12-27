@@ -65,18 +65,18 @@ class GlobalSearchInstance:  # noqa[D101]
     )
 
 
-@knext.parameter_group(label='Error Handling')
+@knext.parameter_group(label='Error Handling', is_advanced=True)
 class ErrorHandling:  # noqa[D101]
 
     ignore_errors = knext.BoolParameter(
         'Ignore errors',
         'Ignore errors of single MdH Core instances',
-        default_value=False
+        default_value=False,
     )
     ignore_failed_connections = knext.BoolParameter(
         'Ignore failed connections',
         'Ignore failed connections to MdH Core instances',
-        default_value=False
+        default_value=False,
     )
 
 

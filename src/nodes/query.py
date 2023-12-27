@@ -1,6 +1,7 @@
 """Query nodes."""
 
 # Python imports
+import itertools
 import json
 import logging
 from pathlib import Path
@@ -121,8 +122,8 @@ def create_query_parameter(query_config: dict) -> QueryParameters:
 class MetadataQueryToFileNode(knext.PythonNode):
     """Run a generic GraphQL query on a MdH Core or Global Search and stream the result into a file.
 
-    By specifying a file containing a generic **GraphQL MdH Search**,
-    the harvested metadata can be streamed into a file for later retrieval.
+    Build and run a generic **GraphQL MdH Search** query via the **Metadata Query Creator** node
+    and stream harvested metadata into a file for later retrieval.
 
     For any questions, refer to the [API-Documentation](https://metadatahub.de/documentation/3.0/graphql/)
     (mdhSearch) or send an e-mail to mdh-support@graudata.com.
@@ -217,11 +218,12 @@ class MetadataQueryToFileNode(knext.PythonNode):
 class MetadataQueryToStringNode(knext.PythonNode):
     """Run a generic GraphQL query on a MdH Core or Global Search and retrieve the result into a KNIME table.
 
-    By specifying a file containing a generic **GraphQL MdH Search**,
-    the harvested metadata can be examined directly in a KNIME data table.
+    Build and run a generic **GraphQL MdH Search** query via the **Metadata Query Creator** node
+    and examine harvested metadata directly in a KNIME data table.
 
     Warning: This node should be used with caution
-    when dealing with large amounts of metadata, as the available RAM could be exhausted.
+    when retrieving large amounts of metadata as the available RAM could be exhausted.
+    If memory is an issue, use the **Metadata Query to File** node instead.
 
     For any questions, refer to the [API-Documentation](https://metadatahub.de/documentation/3.0/graphql/)
     (mdhSearch) or send an e-mail to mdh-support@graudata.com.
@@ -253,6 +255,9 @@ class MetadataQueryToStringNode(knext.PythonNode):
                 Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
 
+        if query_config['selected_tags'] and 'SourceFile' not in query_config['selected_tags']:
+            query_config['selected_tags'].append('SourceFile')
+
         query_parameter = create_query_parameter(query_config)
         query_output = QueryOutput(
             only_count=query_config['only_count']
@@ -272,12 +277,32 @@ class MetadataQueryToStringNode(knext.PythonNode):
                 output=query_output
             )
 
-        metadata = json.dumps(json.loads(result)['data']['mdhSearch'])
-        df = pd.DataFrame(
-            {
-                'metadata': metadata
-            },
-            index=[0],
-        )
-        return knext.Table.from_pandas(df)
+        instances = []
+        source_files = []
+        tags = []
+        values = []
+        for file in json.loads(result)['data']['mdhSearch']['files']:
+            instance = file['instanceName']
+            metadata = file['metadata']
+            source_file = next(
+                itertools.dropwhile(
+                    lambda entry: entry['name'] != 'SourceFile',
+                    metadata
+                )
+            )['value']
 
+            for entry in metadata:
+                instances.append(instance)
+                source_files.append(source_file)
+                tags.append(entry['name'])
+                values.append(entry['value'])
+
+        table = {
+            'Instance': instances,
+            'SourceFile': source_files,
+            'Tag': tags,
+            'Value': values
+        }
+        return knext.Table.from_pandas(
+            pd.DataFrame(table)
+        )

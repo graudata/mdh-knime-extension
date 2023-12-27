@@ -1,7 +1,6 @@
 """Utility nodes."""
 
 # Python imports
-import json
 import logging
 
 # 3rd party imports
@@ -92,11 +91,9 @@ class InfoNode(knext.PythonNode):
         else:
             result = mdh.core.main.info(instance)
 
-        info = json.dumps(result)
-        df = pd.DataFrame(
-            {
-                'info': info
-            },
-            index=[0],
-        )
+        data = {}
+        for key, value in result.items():
+            data[key[0].upper() + key[1:]] = value
+
+        df = pd.DataFrame(data, index=[0])
         return knext.Table.from_pandas(df)
