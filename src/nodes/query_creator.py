@@ -230,7 +230,7 @@ def inject_filter_parameters(filter, filter_idx):
     tag = knext.StringParameter(
         'Tag',
         'Choose a metadata tag, '
-        'e.g. *SourceFile*, *FileName*, *FileSize*, *FileType*, *FileAccessDate*, ...'
+        'e.g. **SourceFile**, **FileName**, **FileSize**, **FileType**, **FileAccessDate**, ...'
     )
 
     date_type = type(f'Date{filter_idx}', (), {})
@@ -283,13 +283,14 @@ class FilterConfiguration:  # noqa[D101]
         'Filter logic',
         'For each appended filter, it is up to you to add the corresponding filter logic. '
         'Allowed logical connectives are conjunction, disjunction and negation. '
-        'For example, if you have three filters *f0*, *f1* and *f2* you are able to '
-        'create the expression *f0 or (f1 and not f2)*.',
+        'For example, if you have three filters **f0**, **f1** and **f2** you are able to '
+        'create the expression **f0 or (f1 and not f2)**.',
         'f0'
     )
     selected_tags = knext.StringParameter(
         'Selected tags',
-        'The selected tags which are part of the query result set.',
+        'The selected tags which are part of the query result set. '
+        'Leaving this field empty returns all the available tags.',
         ', '.join(DEFAULT_SELECTED_TAGS)
     )
     limit = knext.IntParameter(
@@ -304,12 +305,6 @@ class FilterConfiguration:  # noqa[D101]
         'Offset the result set',
         0,
         min_value=0,
-        is_advanced=True
-    )
-    only_count = knext.BoolParameter(
-        'Only count?',
-        'Mark as checked if only the number (count) of matching files should be returned.',
-        default_value=False,
         is_advanced=True
     )
 
@@ -403,14 +398,12 @@ class MetadataQueryCreatorNode(knext.PythonNode):
         selected_tags = self.filter_configuration.selected_tags
         limit = self.filter_configuration.limit
         offset = self.filter_configuration.offset
-        only_count = self.filter_configuration.only_count
 
         query = {
             'filter_logic': filter_logic,
             'selected_tags': selected_tags.split(', ') if selected_tags else [],
             'limit': limit if limit != 0 else None,
             'offset': offset,
-            'only_count': only_count,
             'filters': []
         }
 

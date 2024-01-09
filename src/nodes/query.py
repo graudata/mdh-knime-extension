@@ -120,9 +120,9 @@ def create_query_parameter(query_config: dict) -> QueryParameters:
     port_type=METADATA_QUERY_TYPE
 )
 class MetadataQueryToFileNode(knext.PythonNode):
-    """Run a generic GraphQL query on a MdH Core or Global Search and stream the result into a file.
+    """Run a generic query on a MdH Core or Global Search and stream the result into a file.
 
-    Build and run a generic **GraphQL MdH Search** query via the **Metadata Query Creator** node
+    Build and run a generic **MdH Search** query via the **Metadata Query Creator** node
     and stream harvested metadata into a file for later retrieval.
 
     For any questions, refer to the [API-Documentation](https://metadatahub.de/documentation/3.0/graphql/)
@@ -174,8 +174,7 @@ class MetadataQueryToFileNode(knext.PythonNode):
             StreamedOutput(
                 False,
                 Path(self.output.output_result_file)
-            ),
-            only_count=query_config['only_count']
+            )
         )
 
         if is_global_search:
@@ -216,9 +215,9 @@ class MetadataQueryToFileNode(knext.PythonNode):
     'A KNIME table with one column containing the queried metadata as a JSON string.'
 )
 class MetadataQueryToStringNode(knext.PythonNode):
-    """Run a generic GraphQL query on a MdH Core or Global Search and retrieve the result into a KNIME table.
+    """Run a generic query on a MdH Core or Global Search and retrieve the result into a KNIME table.
 
-    Build and run a generic **GraphQL MdH Search** query via the **Metadata Query Creator** node
+    Build and run a generic **MdH Search** query via the **Metadata Query Creator** node
     and examine harvested metadata directly in a KNIME data table.
 
     Warning: This node should be used with caution
@@ -259,9 +258,7 @@ class MetadataQueryToStringNode(knext.PythonNode):
             query_config['selected_tags'].append('SourceFile')
 
         query_parameter = create_query_parameter(query_config)
-        query_output = QueryOutput(
-            only_count=query_config['only_count']
-        )
+        query_output = QueryOutput()
 
         if is_global_search:
             result = mdh.global_search.query.query_via_custom_filters(
