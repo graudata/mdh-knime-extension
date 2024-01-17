@@ -104,7 +104,7 @@ def create_query_parameter(query_config: dict) -> QueryParameters:
 
 
 @knext.node(
-    name='Metadata Query to File',
+    name='MdH Execute Query to File',
     node_type=knext.NodeType.SOURCE,
     icon_path='icons/write_query.png',
     category=__category
@@ -119,7 +119,7 @@ def create_query_parameter(query_config: dict) -> QueryParameters:
     description='Query data for this node',
     port_type=METADATA_QUERY_TYPE
 )
-class MetadataQueryToFileNode(knext.PythonNode):
+class MdHExecuteQueryToFileNode(knext.PythonNode):
     """Run a generic query on a MdH Core or Global Search and stream the result into a file.
 
     Build and run a generic **MdH Search** query via the **Metadata Query Creator** node
@@ -195,7 +195,7 @@ class MetadataQueryToFileNode(knext.PythonNode):
 
 
 @knext.node(
-    name='Metadata Query to String',
+    name='MdH Execute Query to String',
     node_type=knext.NodeType.SOURCE,
     icon_path='icons/read_query.png',
     category=__category
@@ -214,7 +214,7 @@ class MetadataQueryToFileNode(knext.PythonNode):
     'metadata table',
     'A KNIME table with one column containing the queried metadata as a JSON string.'
 )
-class MetadataQueryToStringNode(knext.PythonNode):
+class MdHExecuteQueryToStringNode(knext.PythonNode):
     """Run a generic query on a MdH Core or Global Search and retrieve the result into a KNIME table.
 
     Build and run a generic **MdH Search** query via the **Metadata Query Creator** node

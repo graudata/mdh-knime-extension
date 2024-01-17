@@ -401,11 +401,14 @@ class MetadataQueryCreatorNode(knext.PythonNode):
 
         query = {
             'filter_logic': filter_logic,
-            'selected_tags': selected_tags.split(', ') if selected_tags else [],
             'limit': limit if limit != 0 else None,
             'offset': offset,
             'filters': []
         }
+
+        if not selected_tags:
+            selected_tags = []
+        query['selected_tags'] = [selected_tag.strip() for selected_tag in selected_tags.split(',')]
 
         filter_matches = set(re.findall(self._RE_FILTER_MATCHES, filter_logic))
         for filter_key, filter in self._get_filters():
