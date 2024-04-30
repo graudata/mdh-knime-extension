@@ -5,6 +5,6 @@ extension_module: src/extension
 description: Metadata-Hub Extension
 long_description: The functionality of the Metadata-Hub is provided by KNIME nodes. If you have any questions, please refer to the documentation https://metadatahub.de/documentation/3.0/mdh/index.html or contact us via mdh-support@graudata.com.
 group_id: graudata
-version: 1.1.0
+version: 1.1.1
 vendor: GRAU DATA GmbH, Schwäbisch Gmünd, Germany
 license_file: LICENSE.TXT
