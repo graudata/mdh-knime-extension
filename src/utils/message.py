@@ -19,12 +19,6 @@ class Messages:
         'Please add a running MdH Global Search called \'{global_search}\''
     EXISTING_GRAPHQL_FILE             : Final[str] = 'Please provide an existing GraphQL file'
 
-    # License
-    ACTIVE_LICENSE_BY_NAME            : Final[str] = \
-        'MdH Core \'{core}\' does not have an active license'
-    VALID_LICENSE_BY_NAME            : Final[str] = \
-        'MdH Core \'{core}\' does not have a valid license'
-
     # Harvest
     HARVEST_GLOBAL_SEARCH             : Final[str] = \
         'Harvest tasks cannot be executed on a MdH Global Search'

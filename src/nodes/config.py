@@ -122,16 +122,6 @@ class CoreConfigurationNode(knext.PythonNode):
                 Messages.ADD_RUNNING_CORE_BY_NAME.format(core=self.instance.core)
             )
 
-        license_ = mdh.core.licensing.info(self.instance.core)
-        if license_['licenseData'] is None:
-            exec_context.set_warning(
-                Messages.ACTIVE_LICENSE_BY_NAME.format(core=self.instance.core)
-            )
-        if not license_['validKey']:
-            exec_context.set_warning(
-                Messages.VALID_LICENSE_BY_NAME.format(core=self.instance.core)
-            )
-
         return MdHInstanceConnectionPortObject(
             MdHInstanceConnectionPortObjectSpec(INSTANCE_CONNECTION_TYPE.id),
             {
@@ -192,15 +182,6 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
             if core not in running_cores:
                 raise RuntimeError(
                     Messages.ADD_RUNNING_CORE_BY_NAME.format(core=core)
-                )
-            license_ = mdh.core.licensing.info(core)
-            if license_['licenseData'] is None:
-                raise RuntimeError(
-                    Messages.ACTIVE_LICENSE_BY_NAME.format(core=core)
-                )
-            if not license_['validKey']:
-                raise RuntimeError(
-                    Messages.VALID_LICENSE_BY_NAME.format(core=core)
                 )
 
         return MdHInstanceConnectionPortObject(
