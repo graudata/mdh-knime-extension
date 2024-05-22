@@ -254,7 +254,12 @@ class MdHExecuteQueryToStringNode(knext.PythonNode):
                 Messages.ADD_RUNNING_INSTANCE_BY_NAME.format(instance=instance)
             )
 
+        exclude_source_file_tag = False
         if query_config['selected_tags'] and 'SourceFile' not in query_config['selected_tags']:
+
+            # Exclude "SourceFile" tag when it wasn't explicity requested
+            exclude_source_file_tag = True
+
             query_config['selected_tags'].append('SourceFile')
 
         query_parameter = create_query_parameter(query_config)
@@ -289,6 +294,9 @@ class MdHExecuteQueryToStringNode(knext.PythonNode):
             )['value']
 
             for entry in metadata:
+                if exclude_source_file_tag and entry['name'] == 'SourceFile':
+                    continue
+
                 instances.append(instance)
                 source_files.append(source_file)
                 tags.append(entry['name'])

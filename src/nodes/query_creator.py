@@ -407,8 +407,10 @@ class MetadataQueryCreatorNode(knext.PythonNode):
         }
 
         if not selected_tags:
-            selected_tags = []
-        query['selected_tags'] = [selected_tag.strip() for selected_tag in selected_tags.split(',')]
+            query['selected_tags'] = []
+        else:
+            query['selected_tags'] = \
+                [selected_tag.strip() for selected_tag in selected_tags.split(',')]
 
         filter_matches = set(re.findall(self._RE_FILTER_MATCHES, filter_logic))
         for filter_key, filter in self._get_filters():
