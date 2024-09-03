@@ -9,4 +9,4 @@ dependencies:
   - knime-python-base
   - markdown
   - pandas
-  - graudata::mdh=3.2.1
+  - graudata::mdh=3.3.0
