@@ -33,12 +33,16 @@ class TagIsNotEmpty(knext.Condition):
         super().__init__()
         self._subject = subject
 
-    def to_dict(self):
+    def to_dict(self, find_scope, ctx):
+        """Converts the Condition into a dict that is JSON serializable."""
         return {
-            'properties': {
-                'tag': {
-                    'not': {
-                        'const': ''
+            'scope': str(find_scope(self._subject)),
+            'schema': {
+                'properties': {
+                    'tag': {
+                        'not': {
+                            'const': ''
+                        }
                     }
                 }
             }
