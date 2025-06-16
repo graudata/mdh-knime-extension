@@ -1,6 +1,6 @@
 name: mdh_extension
 author: Marlon Weghorn
-env_yml_path: environment.yml
+pixi_toml_path: pixi.toml
 extension_module: src/extension
 description: Metadata-Hub Extension
 long_description:
