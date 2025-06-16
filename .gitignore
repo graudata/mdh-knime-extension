@@ -1,1 +1,6 @@
 */**/__pycache__
+
+# pixi environments
+.pixi
+*.egg-info
+local-update-site
