@@ -10,8 +10,10 @@ from mdh.errors import (
     MdHEnvironmentError,
     MdHNotInitializedError
 )
-from mdh.types.connection import GlobalSearchHeaders
-from mdh.types.query import DownloadFormat
+from mdh.types import (
+    DownloadFormat,
+    GlobalSearchHeaders
+)
 from .parameter import FlowVariables
 
 
@@ -25,7 +27,7 @@ def get_running_mdh_core_names() -> list[str]:
     except (MdHNotInitializedError, MdHEnvironmentError) as err:
         LOGGER.error(str(err))
     else:
-        return [core.name for core in cores]
+        return [core.basic_info.name for core in cores]
     return []
 
 
@@ -37,7 +39,7 @@ def get_running_mdh_global_search_names() -> list[str]:
     except (MdHNotInitializedError, MdHEnvironmentError) as err:
         LOGGER.error(str(err))
     else:
-        return [global_search.name for global_search in global_searches]
+        return [global_search.basic_info.name for global_search in global_searches]
     return []
 
 
@@ -66,7 +68,7 @@ def mdh_instance_is_global_search(name: str) -> bool:
     except (MdHNotInitializedError, MdHEnvironmentError) as err:
         raise RuntimeError(str(err))
 
-    return any(global_search.name == name for global_search in global_searches)
+    return any(global_search.basic_info.name == name for global_search in global_searches)
 
 
 def mdh_download_format_exists(download_format: str) -> bool:

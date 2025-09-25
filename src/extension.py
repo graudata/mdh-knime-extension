@@ -14,8 +14,5 @@ knext.category(
 
 # Node imports
 import nodes.config  # noqa[I202,F404]
-import nodes.utility  # noqa[I202,F404]
-import nodes.harvest  # noqa[I202,F404]
 import nodes.query  # noqa[I202,F404]
 import nodes.query_creator  # noqa[I202,F404]
-import nodes.statistic  # noqa[I202,F404]

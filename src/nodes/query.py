@@ -12,7 +12,7 @@ import pandas as pd
 
 # Local imports
 import mdh
-from mdh.types.query import (
+from mdh.types import (
     DownloadFormat,
     QueryFilter,
     QueryOutput,

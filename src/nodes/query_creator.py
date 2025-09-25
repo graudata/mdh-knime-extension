@@ -9,7 +9,7 @@ from enum import StrEnum
 
 # 3rd party imports
 import knime.extension as knext
-from mdh.types.query._parameters._base import DEFAULT_SELECTED_TAGS
+from mdh.types._query._parameters._base import DEFAULT_SELECTED_TAGS
 
 # Local imports
 from .query import __category

@@ -12,7 +12,7 @@ knime-extension = ">=5.5.0"
 knime-python-base = ">=5.5.0"
 markdown = "*"
 pandas = "*"
-mdh = { version = "3.3.0.*", channel = "graudata" }
+mdh = { version = "3.6.1.*", channel = "graudata" }
 
 [pypi-dependencies]
 

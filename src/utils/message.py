@@ -8,7 +8,6 @@ class Messages:
     """Available node/log messages."""
 
     # Misc
-    ADD_RUNNING_INSTANCE              : Final[str] = 'Please add a running MdH Instance'
     ADD_RUNNING_INSTANCE_BY_NAME          : Final[str] = \
         'Please add a running MdH Instance called \'{instance}\''
     ADD_RUNNING_CORE                  : Final[str] = 'Please add a running MdH Core'
@@ -17,15 +16,8 @@ class Messages:
     ADD_RUNNING_GLOBAL_SEARCH         : Final[str] = 'Please add a running MdH Global Search'
     ADD_RUNNING_GLOBAL_SEARCH_BY_NAME : Final[str] = \
         'Please add a running MdH Global Search called \'{global_search}\''
-    EXISTING_GRAPHQL_FILE             : Final[str] = 'Please provide an existing GraphQL file'
-
-    # Harvest
-    HARVEST_GLOBAL_SEARCH             : Final[str] = \
-        'Harvest tasks cannot be executed on a MdH Global Search'
 
     # Query
-    QUERY_VALID_INPUT_FILE            : Final[str] = \
-        'Please provide a valid file to retrieve metadata from'
     QUERY_VALID_DOWNLOAD_FORMAT       : Final[str] = 'Please provide a valid download format'
     QUERY_VALID_OUTPUT_FILE           : Final[str] = \
         'Please provide an absolute file path for the output file'

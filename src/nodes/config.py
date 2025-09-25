@@ -174,7 +174,7 @@ class GlobalSearchConfigurationNode(knext.PythonNode):
 
         cores = split_global_search_cores(self.instance.selected_cores)
         running_cores = [
-            core.name
+            core.basic_info.name
             for core in
             mdh.core.main.get(only_running=True)
         ]
